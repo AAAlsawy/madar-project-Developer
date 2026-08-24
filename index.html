@@ -1,0 +1,470 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Madar OS — New Developer Operational Spec G</title>
+  <style>
+    :root{
+      --bg:#07111f;--card:#0d1b2e;--card2:#10233d;--line:#22405f;--text:#eaf2ff;--muted:#a9bbd3;--gold:#d4af37;--blue:#4db3ff;--green:#22c55e;--red:#ef4444;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Tahoma,Arial,sans-serif;background:linear-gradient(180deg,#07111f,#0b1630);color:var(--text);line-height:1.9}
+    .wrap{max-width:1280px;margin:0 auto;padding:28px 18px 70px}
+    .hero{background:linear-gradient(145deg,#10233d,#0b1630);border:1px solid rgba(212,175,55,.25);border-radius:22px;padding:28px 24px;box-shadow:0 18px 60px rgba(0,0,0,.28)}
+    h1,h2,h3{margin:0 0 14px;color:#fff}
+    h1{font-size:38px;line-height:1.3}
+    h2{font-size:26px;margin-top:34px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+    h3{font-size:18px;margin-top:24px;color:#f7fbff}
+    p,li,td,th{font-size:15px}
+    p{margin:0 0 14px}
+    .lead{color:#dce8f8;font-size:16px}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;margin:4px 0;background:rgba(77,179,255,.13);color:#9ad3ff;border:1px solid rgba(77,179,255,.22)}
+    .gold{background:rgba(212,175,55,.11);color:#f4d97a;border-color:rgba(212,175,55,.25)}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:18px}
+    .mono{font-family:Consolas,monospace;white-space:pre-wrap;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px}
+    table{width:100%;border-collapse:collapse;margin:14px 0;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden}
+    th,td{padding:12px 11px;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:top;text-align:right}
+    th{background:rgba(255,255,255,.04);color:#fff}
+    ul,ol{margin:0 0 14px;padding:0 20px 0 0}
+    .section{margin-top:18px}
+    .note{color:var(--muted)}
+    .ok{color:#9cf0b2}.warn{color:#ffd479}.bad{color:#ff9e9e}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="pill gold">Master Build Spec</div>
+    <h1>Madar OS — New Developer Operational Spec G</h1>
+    <p class="lead">هذا هو المستند التنفيذي الأعلى للمبرمج. هدفه أن يشرح Madar كنظام تشغيل تعليمي وتجاري متكامل من أول دخول المستخدم حتى إقفال الدورة التشغيلية والمالية والأرشيفية، مع تضمين Room OS بالتفصيل الكامل داخل نفس المستند، بحيث لا يبقى فراغ منطقي أو تقني أو تشغيلي يحتاج سؤالاً إضافياً قبل التنفيذ.</p>
+    <p class="lead">هذه النسخة G تجمع منطق المستند التشغيلي الأساسي، وتوسعة النسخة F الخاصة بالغرفة، وتحوّلها إلى blueprint واحد يغطي: الهوية، الصلاحيات، الحجز، الموافقة، الدفع، الجلسة، التسجيل، الأرشفة، القيود المالية، مستحقات المعلم، طوابير الإدارة، الربط مع مزودات البث والوسائط، متطلبات الأمان، الكيانات، الحالات، الخدمات، الأحداث، وتسلسل البناء المرحلي.</p>
+  </section>
+
+  <section class="section">
+    <h2>1) المبادئ الحاكمة</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>1.1 طبيعة المنتج</h3>
+        <p>Madar ليس Prototype صفحات ولا مجموعة شاشات منفصلة، بل نظام تشغيل موحّد يربط ثلاث طبقات: Entry OS، Room OS، Admin/Finance OS. أي نجاح شكلي في الواجهة لا يُعتد به إذا لم تعمل السلسلة كاملة من الدخول حتى الإقفال المالي.</p>
+        <ul>
+          <li>كل شاشة يجب أن تخدم إجراءً حقيقياً.</li>
+          <li>كل حدث مهم يجب أن يخلّف state change وaudit trail.</li>
+          <li>الحقيقة التشغيلية لا تُقرأ من الواجهة بل من الحالات والقيود والسجلات.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>1.2 تعريف النجاح</h3>
+        <ul>
+          <li>الطالب يستطيع الدخول، الموافقة، الدفع، الحجز، والانضمام للحصة في الوقت الصحيح.</li>
+          <li>المعلم يستطيع تفعيل ملفه، إدارة جدوله، تشغيل الحصة، وإنهاءها مع احتساب مستحقه تلقائياً بعد completion.</li>
+          <li>الإدارة تستطيع المراجعة، اعتماد المعلمين، متابعة النزاعات، تجهيز التحويلات الشهرية، واعتماد شيت التحويل يدوياً الآن.</li>
+          <li>الأرشيف، التسجيل، والمال مرتبطون بنفس session lineage ولا يوجد انفصال بينهم.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>2) النطاق التنفيذي الكامل</h2>
+    <table>
+      <thead><tr><th>المجال</th><th>ما يجب أن يبنيه المبرمج</th><th>لماذا هو أساسي</th></tr></thead>
+      <tbody>
+        <tr><td>Identity</td><td>Auth, OTP/OAuth, Profiles, Roles, RLS, onboarding, consent records</td><td>بدون هوية وصلاحيات سليمة لا يمكن حماية التدفقات ولا فصل الأدوار.</td></tr>
+        <tr><td>Booking</td><td>المجموعات، الخصوصي، جدولة الفتحات، التأكيد، الإلغاء، logs، join readiness</td><td>هذه بوابة التشغيل والإيراد.</td></tr>
+        <tr><td>Payment</td><td>Invoices, payment transactions, gateway webhooks, refund logic, wallet support</td><td>التحصيل يجب أن يكون قابلاً للتتبع والمراجعة.</td></tr>
+        <tr><td>Room OS</td><td>فتح الغرفة، stage، live state، مشاركة، ملفات، PDF، board، student permission، recording، archive linkage</td><td>الغرفة هي مركز التنفيذ الفعلي للحصة.</td></tr>
+        <tr><td>Media</td><td>Cloudflare live/WebRTC أو ما يعادله، Bunny archive/HLS، signed URLs، lifecycle</td><td>يحفظ البث والأرشيف ضمن تدفق موثوق وآمن.</td></tr>
+        <tr><td>Finance OS</td><td>Wallet ledger, teacher payable, payout request, settlement, monthly payout sheet, revenue remainder</td><td>يحوّل الإيراد المحصل إلى أثر مالي صحيح وقابل للإقفال.</td></tr>
+        <tr><td>Admin OS</td><td>Queues, approvals, session review, disputes, compliance, reports</td><td>بدونه تتحول المنصة إلى فوضى تشغيلية بعد الإطلاق.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>3) الأدوار والصلاحيات</h2>
+    <table>
+      <thead><tr><th>الدور</th><th>ما يراه</th><th>ما يفعله</th><th>ممنوع عنه</th></tr></thead>
+      <tbody>
+        <tr><td>Student</td><td>البحث، الحجز، الفواتير، الجلسات، الأرشيف المسموح، الرصيد</td><td>موافقة، دفع، حجز، دخول الحصة، مشاهدة الأرشيف، فتح نزاع عند الحاجة</td><td>تغيير الأسعار، اعتماد تحويلات، الوصول لجلسات لا يملكها</td></tr>
+        <tr><td>Teacher</td><td>ملفه، جدوله، جلساته، محفظته، payables، payout requests، أرشيفه المسموح</td><td>إدارة الفتحات، قبول الخصوصي، فتح الجلسة، منح أذونات الكتابة، إنهاء الجلسة، طلب سحب</td><td>اعتماد سحبه بنفسه، رؤية بيانات خارج نطاقه، تجاوز سياسات completion</td></tr>
+        <tr><td>Admin</td><td>الطوابير، الاعتمادات، التقارير، التسجيلات، النزاعات، الشيتات، الإقفال</td><td>اعتماد، رفض، تعليق، مراجعة، إقفال، تصدير تقارير، اعتماد شيت التحويل</td><td>تعديل audit logs دون أثر، كسر ledger مباشرة من الواجهة</td></tr>
+        <tr><td>System Workers</td><td>لا واجهة بشرية</td><td>webhooks, reminders, attendance processing, recording sync, settlement jobs</td><td>أي قرار إداري نهائي غير مصرّح</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>4) الدورة التشغيلية المغلقة</h2>
+    <div class="mono">User Entry → Identity Check → Role Routing → Catalog/Availability → Booking Intent → Consent/Pay Gate → Invoice/Transaction → Booking Confirmed → Join Token Ready → Room Open → Live Session → Recording/Artifacts → Session End → Completion Evaluation → Teacher Payable → Wallet Ledger Posting → Monthly Payout Sheet → Manual Admin Approval of Transfer Sheet → Payout Marked Paid → Monthly Revenue Remainder / P&amp;L / Audit Closure</div>
+    <p>هذا التسلسل ليس وصفاً عاماً، بل هو العمود الفقري الذي يجب أن تنبني عليه الجداول، الحالات، الخدمات، والأحداث. أي قطع في هذه السلسلة يعني أن Madar لم يُبنَ كنظام تشغيل متكامل.</p>
+  </section>
+
+  <section class="section">
+    <h2>5) دورة الطالب</h2>
+    <h3>5.1 الدخول والتهيئة</h3>
+    <ul>
+      <li>يدخل الطالب عبر OAuth أو واتساب/هاتف مع OTP.</li>
+      <li>إذا كان جديداً يمر بـ onboarding مختصر: الاسم، الصف، المواد المهتم بها، ولي الأمر عند الحاجة، سجل الموافقة القانونية.</li>
+      <li>بعد التحقق يتم توليد جلسة مصادقة آمنة قصيرة العمر مع refresh policy واضحة وربط single active token عند الحاجة.</li>
+    </ul>
+    <h3>5.2 الحجز</h3>
+    <table>
+      <thead><tr><th>نوع الحجز</th><th>المنطق</th><th>الحالة الناتجة</th></tr></thead>
+      <tbody>
+        <tr><td>Group</td><td>الطالب يختار صفاً + مادة + offering منشور + موعد محدد وسعر ظاهر</td><td>Confirmed مباشرة بعد نجاح الدفع أو تفعيل المجانية حسب القاعدة</td></tr>
+        <tr><td>Private</td><td>الطالب يختار معلماً ووقتاً متاحاً ويرسل طلباً</td><td>Pending Teacher Confirmation ثم Confirmed بعد قبول المعلم وسداد الالتزام المالي</td></tr>
+      </tbody>
+    </table>
+    <h3>5.3 بوابة الموافقة والدفع</h3>
+    <ul>
+      <li>قبل اكتمال الحجز يجب حفظ Consent Record إذا كانت السياسة تتطلبها.</li>
+      <li>يُنشأ Invoice لكل التزام مالي، ثم Payment Transaction عند محاولة الدفع.</li>
+      <li>نجاح webhook من بوابة الدفع هو المصدر المعتمد لتثبيت التحصيل وليس مجرد رسالة الواجهة.</li>
+      <li>لا يُنشأ JoinAccessToken صالح إلا بعد صلاحية الحجز للدخول.</li>
+    </ul>
+    <h3>5.4 دخول الجلسة</h3>
+    <ul>
+      <li>زر الدخول يتفعل ضمن نافذة زمنية configurable قبل بداية الحصة.</li>
+      <li>عند الدخول يُسجّل SessionAttendance مع وقت الدخول والجهاز وعنوان IP والسياسات المرتبطة.</li>
+      <li>إذا لم يحضر الطالب أو خرج مبكراً تطبق Policy Engine قواعد no-show أو partial attendance أو الاسترداد.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>6) دورة المعلم</h2>
+    <h3>6.1 التفعيل</h3>
+    <ul>
+      <li>المعلم يملأ TeacherProfile: المواد، الصفوف، أنماط التدريس، الأسعار، التوفر، بيانات السحب، الهوية.</li>
+      <li>لا يصبح مرئياً للحجز حتى يتحول status إلى Active بقرار إداري أو rule-based activation.</li>
+    </ul>
+    <h3>6.2 الجدول</h3>
+    <ul>
+      <li>يرى اليوم، الغد، الطلبات المعلقة، الجلسات التي تحتاج مراجعة، والرصيد والمستحقات.</li>
+      <li>في الخصوصي يقبل أو يرفض ضمن SLA زمني، وفي المجموعات ينشر الفتحات الجاهزة.</li>
+    </ul>
+    <h3>6.3 أثناء الحصة</h3>
+    <ul>
+      <li>يفتح الجلسة، يشغّل الكاميرا/المايك، يدير السطح الرئيسي، يسمح لطالب محدد بالتفاعل، وينهي الجلسة.</li>
+      <li>يبدأ التسجيل تلقائياً بحسب الإعداد المعتمد، ولا يعتمد النظام على زر يدوي وحده لحفظ الجلسة.</li>
+    </ul>
+    <h3>6.4 بعد الحصة</h3>
+    <ul>
+      <li>تُقيّم الجلسة: completed / disputed / no-show / cancelled.</li>
+      <li>إذا أصبحت completed وبحسب القواعد، ينشأ TeacherPayable وتُرحّل قيوده إلى WalletLedger.</li>
+      <li>المعلم يرى مستحقاته المتراكمة ويقدّم PayoutRequest عند تحقق شروط السحب.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>7) دورة الإدارة والمال</h2>
+    <h3>7.1 الطوابير</h3>
+    <table>
+      <thead><tr><th>الطابور</th><th>الوارد</th><th>الإجراء</th><th>الأثر</th></tr></thead>
+      <tbody>
+        <tr><td>Teacher Approval</td><td>ملفات المعلمين</td><td>Activate / Reject / Request Changes</td><td>تحديث الأهلية للحجز</td></tr>
+        <tr><td>Payout Review</td><td>طلبات السحب</td><td>Approve / Reject / Hold</td><td>تحديث حالة الطلب دون كسر ledger</td></tr>
+        <tr><td>Session Review</td><td>جلسات فيها مشكلة أو نزاع</td><td>Inspect / Resolve / Escalate</td><td>تحديد أهلية completion وpayable</td></tr>
+        <tr><td>Compliance</td><td>بلاغات أو خروقات</td><td>Warn / Lock / Archive</td><td>إجراء وقائي موثق</td></tr>
+      </tbody>
+    </table>
+    <h3>7.2 الإقفال المالي</h3>
+    <ul>
+      <li>بعد كل جلسة مكتملة: إنشاء payable + posting إلى ledger + revenue entry حسب القاعدة المحاسبية المعتمدة.</li>
+      <li>آخر الشهر: النظام يُنتج Monthly Teacher Payout Summary وشيت تحويل مجمّع لكل معلم مؤهل.</li>
+      <li>في المرحلة الحالية: تحويل مرتبات المعلمين ليس آلياً بالكامل؛ بل يُجهَّز الشيت ويُعتمد يدوياً من الإدارة ثم تُعلَّم التحويلات Paid داخل النظام.</li>
+      <li>في مرحلة لاحقة: يمكن تفعيل تنفيذ شبه آلي أو بضغطة زر، لكن بعد استقرار دورة الاعتماد اليدوي.</li>
+      <li>النظام يجب أن يحسب أيضاً باقي المبلغ المحصل من الطلبة بعد خصم مستحقات المعلمين والاستردادات وأي تسويات، مع إظهار Revenue Remainder وP&amp;L snapshot وتقارير open balances.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>8) Room OS الكامل</h2>
+    <p>Room OS في G ليس ملحقاً بصرياً، بل جزء عضوي من الدورة التشغيلية. الغرفة هي المكان الذي تتحول فيه booking المؤكدة إلى session فعلية، والتسجيل إلى archive، والحضور إلى completion، والجلسة المكتملة إلى payable.</p>
+    <h3>8.1 مبادئ الغرفة</h3>
+    <ul>
+      <li>الغرفة تفتح فقط للجلسات المؤهلة.</li>
+      <li>السطح الأساسي هو Shared Lesson Surface: PDF / Screen Share / Content Stage.</li>
+      <li>السبورة موجودة كأداة قوية، لكنها ليست محور المنصة إلا عند الحاجة التعليمية.</li>
+      <li>كل ما يحدث داخل الغرفة يجب أن يكون قابلاً للبث والتسجيل والأرشفة ضمن نفس session lineage.</li>
+    </ul>
+    <h3>8.2 منطق فتح الغرفة</h3>
+    <table>
+      <thead><tr><th>الحدث</th><th>الشرط</th><th>الناتج</th></tr></thead>
+      <tbody>
+        <tr><td>Room Prepared</td><td>Booking confirmed + schedule valid</td><td>إنشاء room context وربطه بالجلسة</td></tr>
+        <tr><td>Join Enabled</td><td>ضمن نافذة الدخول المسموح بها</td><td>تفعيل join token للطالب/المعلم</td></tr>
+        <tr><td>Room Opened</td><td>المعلم دخل وبدأ الجلسة</td><td>تحديث session status إلى room_open/live</td></tr>
+        <tr><td>Room Closed</td><td>المعلم أنهى الجلسة أو timeout policy</td><td>بدء إغلاق التسجيل والأرشفة والتقييم</td></tr>
+      </tbody>
+    </table>
+    <h3>8.3 طبقات الواجهة داخل الغرفة</h3>
+    <table>
+      <thead><tr><th>الطبقة</th><th>الوصف</th><th>ملاحظات تنفيذ</th></tr></thead>
+      <tbody>
+        <tr><td>Stage Layer</td><td>المسرح الرئيسي للمحتوى</td><td>يدعم PDF، screen share، lesson media، pointer، annotation</td></tr>
+        <tr><td>Teacher Control Layer</td><td>أزرار الفتح والإذن والتسجيل والحضور والإنهاء</td><td>لا تظهر للطالب</td></tr>
+        <tr><td>Student Interaction Layer</td><td>chat، hand raise، permission-based write/solve</td><td>المعلم يحدد من يتفاعل على السطح</td></tr>
+        <tr><td>Automation Layer</td><td>recording, archive sync, attendance hooks, status updates</td><td>خلفية غير مرئية لكنها أساسية</td></tr>
+        <tr><td>Protection Layer</td><td>dynamic watermark، focus detection، access policy، signed assets</td><td>ردع وتتبّع لا ادعاء منع كامل</td></tr>
+      </tbody>
+    </table>
+    <h3>8.4 السطح الرئيسي</h3>
+    <ul>
+      <li>الافتراضي عند بدء الحصة: lesson PDF أو shared content إذا كان مرفوعاً مسبقاً.</li>
+      <li>يدعم annotation بالقلم، التحديد، النص، pointer، التكبير، والتنقل بين الصفحات.</li>
+      <li>يمكن للمعلم الانتقال إلى screen share أو media display أو board mode دون كسر البث أو التسجيل.</li>
+    </ul>
+    <h3>8.5 Board Mode الثانوية ولكن الكاملة</h3>
+    <ul>
+      <li>Multi-page whiteboard وليست صفحة واحدة فقط.</li>
+      <li>Templates للصفحات: سطور عربي، سطور إنجليزي، مربعات رياضيات، شبكات رسم، صفحات تدريب منظّمة.</li>
+      <li>إمكانية التنقل بين الصفحات، إضافة صفحة جديدة، نسخ صفحة، ومسح صفحة مع تأكيد مناسب.</li>
+      <li>جميع صفحات السبورة تدخل ضمن نفس التسجيل والجلسة ويمكن حفظها كـ session artifacts.</li>
+    </ul>
+    <h3>8.6 تفاعل الطالب داخل الغرفة</h3>
+    <ul>
+      <li>الأصل أن الطالب يشاهد ويستمع ويتابع.</li>
+      <li>الكتابة أو الحل على السطح المشترك لا تتم إلا بعد منح explicit permission من المعلم لطالب محدد أو مجموعة محددة.</li>
+      <li>يمكن أن يرى الطالب مؤشر الدور الحالي: viewer / invited to solve / active writer / muted.</li>
+    </ul>
+    <h3>8.7 التحفيز التعليمي للأطفال</h3>
+    <ul>
+      <li>طبقة Child Engagement اختيارية حسب نوع الحصة والفئة العمرية، وليست مفروضة على حصص الكبار.</li>
+      <li>عند الإجابة الصحيحة يمكن تشغيل applause sound أو celebratory balloons/effects على الشاشة.</li>
+      <li>عند الخطأ يمكن تشغيل تنبيه أخف بصرياً أو صوتياً دون إحراج أو إزعاج.</li>
+      <li>هذه التأثيرات يجب أن تكون قابلة للتفعيل والإيقاف من إعداد الحصة أو إعداد المعلم.</li>
+    </ul>
+    <h3>8.8 الأدوات المساعدة</h3>
+    <ul>
+      <li>آلة حاسبة حديثة داخل الغرفة كأداة utility مدمجة.</li>
+      <li>رفع ملفات مساندة وصور عند الحاجة التعليمية.</li>
+      <li>قائمة المشاركين، الشات، والحضور في لوحة جانبية لا تزاحم المسرح الرئيسي.</li>
+    </ul>
+    <h3>8.9 التسجيل والأرشفة</h3>
+    <ul>
+      <li>التسجيل يبدأ تلقائياً مع live start بحسب السياسة.</li>
+      <li>عند انتهاء الحصة تُغلق live input وتبدأ pipeline الأرشفة ورفع الأصل أو الناتج إلى مزود الأرشيف.</li>
+      <li>كل recording asset يرتبط بـ session_id وscope وصلاحيات المشاهدة.</li>
+      <li>archive availability لا تعني public access؛ بل وصولاً مقيّداً وموقعاً حسب الصلاحيات.</li>
+    </ul>
+    <h3>8.10 الحماية</h3>
+    <ul>
+      <li>Dynamic watermark user-bound وsession-bound على البث أو المشاهدة.</li>
+      <li>Focus/visibility change detection مع logs قابلة للمراجعة.</li>
+      <li>Short-lived signed URLs للوسائط والتسجيلات.</li>
+      <li>المتصفح لا يضمن منع تسجيل الشاشة بالكامل؛ التصميم المطلوب هو deterrence + traceability + policy enforcement.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>9) البنية التقنية المقترحة</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>9.1 الواجهة</h3>
+        <ul>
+          <li>Clean HTML/JS أو framework خفيف منضبط، دون تضخم غير مبرر.</li>
+          <li>واجهات منفصلة منطقياً: Entry, Student, Teacher, Admin, Room.</li>
+          <li>Stage-first design في الغرفة وqueue-first design في الإدارة.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>9.2 الخلفية</h3>
+        <ul>
+          <li>Services modular واضحة boundaries.</li>
+          <li>REST/HTTP APIs + webhooks + workers + event bus أو event dispatcher.</li>
+          <li>Policy engine للحضور والاسترداد والأهلية المالية.</li>
+        </ul>
+      </div>
+    </div>
+    <h3>9.3 مزودات الوسائط</h3>
+    <ul>
+      <li>البث الحي منخفض الكمون: Cloudflare Stream Live / WebRTC أو مزود مكافئ.</li>
+      <li>الأرشفة وإعادة المشاهدة: Bunny Stream أو HLS archive layer مع Signed URLs.</li>
+      <li>يجب بناء Media Adapter abstraction حتى لا يرتبط التطبيق مباشرة بمزود واحد على مستوى منطق الأعمال.</li>
+    </ul>
+    <h3>9.4 بيئة التشغيل</h3>
+    <ul>
+      <li>VPS نظيف، Ubuntu LTS، Nginx reverse proxy، HTTPS، PM2 أو manager مماثل.</li>
+      <li>فصل أسرار البيئة، مفاتيح مزودات الدفع، مفاتيح الوسائط، ومفاتيح التوقيع عن الكود.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>10) نموذج البيانات الأساسي</h2>
+    <table>
+      <thead><tr><th>المجموعة</th><th>الكيانات الأساسية</th><th>ملاحظات</th></tr></thead>
+      <tbody>
+        <tr><td>Identity</td><td>User, Profile, RoleAssignment, StudentProfile, TeacherProfile, ConsentRecord</td><td>فصل الهوية عن الملف التشغيلي</td></tr>
+        <tr><td>Catalog</td><td>Subject, Grade, TeachingMode, TeacherAvailabilitySlot, GroupOffering</td><td>مصدر العرض والتوفر</td></tr>
+        <tr><td>Booking</td><td>Booking, BookingParticipant, BookingStatusLog, JoinAccessToken</td><td>الحجز وحالة الوصول</td></tr>
+        <tr><td>Session</td><td>ClassSession, SessionAttendance, SessionArtifact, SessionDispute, SessionChatLog</td><td>مصدر الحقيقة للحصة</td></tr>
+        <tr><td>Media</td><td>MediaAsset, RecordingAsset, ArchiveLink, SignedAccessGrant</td><td>فصل lifecycle الوسائط عن الجلسة مع الربط</td></tr>
+        <tr><td>Finance</td><td>Invoice, PaymentTransaction, WalletAccount, WalletLedgerEntry, TeacherPayable, PayoutRequest, RevenueEntry</td><td>ledger-first</td></tr>
+        <tr><td>Operations</td><td>AdminQueueItem, DecisionLog, NotificationJob, AuditEvent, PolicySnapshot</td><td>التشغيل والرقابة</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>11) الحالات State Machines</h2>
+    <h3>11.1 Booking Status</h3>
+    <div class="mono">draft → pending_payment / pending_teacher_confirmation → confirmed → ready_to_join → in_session → completed / cancelled / refunded / disputed / no_show</div>
+    <h3>11.2 Session Status</h3>
+    <div class="mono">scheduled → room_prepared → room_open → live → ended → processing_recording → archived / flagged / disputed</div>
+    <h3>11.3 Payment Status</h3>
+    <div class="mono">initiated → pending_gateway → succeeded / failed / expired / refunded / partially_refunded</div>
+    <h3>11.4 Payout Status</h3>
+    <div class="mono">draft → submitted → under_review → approved → paid / rejected / held</div>
+  </section>
+
+  <section class="section">
+    <h2>12) الخدمات المطلوبة</h2>
+    <div class="mono">AuthService
+ProfileService
+ConsentService
+CatalogService
+AvailabilityService
+BookingService
+PricingService
+PaymentService
+WebhookIngestService
+RoomService
+LiveSessionService
+AttendanceService
+BoardService
+MediaService
+RecordingService
+ArchiveService
+NotificationService
+WalletService
+PayableService
+PayoutService
+AdminQueueService
+DisputeService
+AuditService
+PolicyEngine</div>
+    <p>كل خدمة يجب أن تمتلك interface واضحة، اختبارات، events صادرة، واعتماداً محدوداً على الخدمات الأخرى. الممنوع هو بناء صفحة واحدة كبيرة أو controller متضخم يحتوي منطق الحجز والجلسة والمال معاً.</p>
+  </section>
+
+  <section class="section">
+    <h2>13) الأحداث Event-Driven</h2>
+    <div class="mono">user.logged_in
+consent.accepted
+booking.created
+booking.confirmed
+booking.cancelled
+payment.initiated
+payment.succeeded
+payment.failed
+join_token.issued
+session.room_prepared
+session.room_opened
+session.started
+attendance.marked
+recording.started
+recording.saved
+recording.archived
+session.ended
+session.completed
+session.disputed
+teacher.payable.created
+wallet.posted
+payout.requested
+payout.approved
+payout.paid
+admin.decision.logged
+notification.dispatched
+compliance.flag.created</div>
+  </section>
+
+  <section class="section">
+    <h2>14) التشغيل الخلفي Workers</h2>
+    <table>
+      <thead><tr><th>العامل</th><th>متى يعمل</th><th>وظيفته</th></tr></thead>
+      <tbody>
+        <tr><td>Reminder Job</td><td>قبل الحصة</td><td>إشعارات الطالب والمعلم</td></tr>
+        <tr><td>Session Start Watcher</td><td>وقت الحصة</td><td>رصد التأخر أو عدم البدء</td></tr>
+        <tr><td>Attendance Sync Worker</td><td>أثناء/بعد الحصة</td><td>تحديث الحضور وربطه بالسياسات</td></tr>
+        <tr><td>Recording Sync Worker</td><td>بعد النهاية</td><td>جلب/رفع التسجيل وربط الأصل بالأرشيف</td></tr>
+        <tr><td>Completion Evaluator</td><td>بعد الإنهاء</td><td>تحديد completion أو dispute أو no-show</td></tr>
+        <tr><td>Wallet Posting Worker</td><td>بعد completion</td><td>ترحيل payable إلى ledger</td></tr>
+        <tr><td>Payout Sheet Builder</td><td>شهرياً</td><td>تجميع مستحقات المعلمين المؤهلة لشيت التحويل</td></tr>
+        <tr><td>Payout Review Queue Builder</td><td>دوري</td><td>تجهيز طلبات السحب للمراجعة</td></tr>
+        <tr><td>Settlement Job</td><td>يومي/شهري</td><td>ملخص التحصيل، open balances، revenue remainder، P&amp;L snapshot</td></tr>
+        <tr><td>Archive Retention Worker</td><td>دوري</td><td>تطبيق retention policies</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>15) متطلبات API والواجهات</h2>
+    <ul>
+      <li>واجهات مصادقة، ملفات، كتالوج، توافر، حجوزات، دفع، webhooks، room lifecycle، attendance، media، wallet، payouts، admin queues.</li>
+      <li>كل endpoint يجب أن يطبق role-based access + resource-level authorization.</li>
+      <li>واجهات room يجب أن تدعم lifecycle واضحاً: prepare, open, join, grant-interaction, end, archive-status.</li>
+      <li>واجهات المال يجب أن تمنع أي تعديل مباشر للأرصدة خارج ledger transaction model.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>16) الأمن والامتثال</h2>
+    <ul>
+      <li>جلسات مصادقة آمنة قصيرة العمر وsingle-session policy عند الحاجة.</li>
+      <li>RLS أو ما يعادلها على مستوى البيانات الحساسة.</li>
+      <li>Rate limiting على auth وOTP والدفع والنقاط الحساسة.</li>
+      <li>Masking للبيانات الحساسة في السجلات.</li>
+      <li>Audit logs غير قابلة للحذف من الواجهة.</li>
+      <li>Signed URLs للوسائط والأرشيف.</li>
+      <li>Dynamic watermark على البث والتسجيل.</li>
+      <li>فصل مفاتيح المزودات، سرية webhook signatures، والتحقق من سلامة requests.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>17) خطة البناء المرحلية</h2>
+    <table>
+      <thead><tr><th>Phase</th><th>النتيجة المطلوبة</th><th>ماذا تشمل</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>أساس الدخول والصلاحيات</td><td>Auth + Roles + Profiles + RLS + Root routing</td></tr>
+        <tr><td>2</td><td>بوابة أول دخل فعلي</td><td>Catalog + Availability + Booking Engine + Consent/Pay Gate + Payment Webhooks</td></tr>
+        <tr><td>3</td><td>لوحات تشغيل فعلية</td><td>Student Window + Teacher Window + minimum admin visibility</td></tr>
+        <tr><td>4</td><td>Room OS مغلق الحلقة</td><td>Prepare/Open/Join/Live/End + attendance + recording trigger + archive linkage + board/tools</td></tr>
+        <tr><td>5</td><td>الإدارة والمال</td><td>Queues + Disputes + Wallet Ledger + Payables + Payout Requests + Monthly Sheet Builder</td></tr>
+        <tr><td>6</td><td>الإقفال والتحسين</td><td>Settlement reports + retention + analytics + later payout automation</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>18) سيناريوهات القبول النهائية</h2>
+    <ol>
+      <li>طالب جديد يدخل، يوافق، يدفع، يحجز مجموعة، يدخل الحصة، تُسجل الجلسة، تُؤرشف، ويظهر أثرها المالي كاملاً.</li>
+      <li>طالب يحجز خصوصي، يقبل المعلم، ينجح الدفع، يتفعل join token، تفتح الغرفة، ينهي المعلم الجلسة، ويُنشأ payable صحيح.</li>
+      <li>المعلم يكمل ملفه، يُعتمد، ينشر فتحة، يدير الحصة باستخدام PDF/board/tools، ثم يرى payable في محفظته.</li>
+      <li>الإدارة تراجع نزاع جلسة وتجمّد payable لحين القرار، ثم تُطلقه أو تلغيه حسب outcome.</li>
+      <li>في نهاية الشهر يُبنى شيت تحويل المعلمين تلقائياً، ثم تعتمد الإدارة التحويل يدوياً، وتتحول الحالات إلى paid دون كسر السجل المالي.</li>
+      <li>النظام يخرج ملخص Revenue Remainder بعد خصم مستحقات المعلمين والاستردادات مع أثر واضح في التقارير.</li>
+      <li>الحصص المخصصة للأطفال يمكن أن تفعل مؤثرات التشجيع، بينما حصص الكبار تبقى بدونها، ضمن نفس Room OS والسياسات.</li>
+    </ol>
+  </section>
+
+  <section class="section">
+    <h2>19) المطلوب من المبرمج بلا التباس</h2>
+    <ol>
+      <li>ابنِ Madar كنظام domains مترابطة، لا كمجموعة صفحات HTML.</li>
+      <li>ابدأ بتعريف entities وstate machines وpolicies قبل أي تجميل واجهات.</li>
+      <li>نفّذ closed loop كاملة: booking → payment → room → archive → payable → payout review → monthly settlement.</li>
+      <li>عامل Room OS كقلب تنفيذي من المنظومة لا كملحق ثانوي.</li>
+      <li>اجعل ledger هو مصدر الحقيقة المالية الوحيد.</li>
+      <li>أبقِ تحويل مرتبات المعلمين معتمداً يدوياً في هذه المرحلة عبر payout sheet approval، مع تصميم يسمح لاحقاً بالأتمتة بضغطة زر.</li>
+      <li>اكتب test scenarios end-to-end تغطي الطالب والمعلم والإدارة والوسائط والمال.</li>
+      <li>لا تعتبر المشروع ناجحاً إذا غاب أي رابط بين الجلسة والأرشيف أو بين completion والمستحقات أو بين التحصيل والإقفال المالي.</li>
+    </ol>
+  </section>
+</div>
+</body>
+</html>
